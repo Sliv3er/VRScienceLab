@@ -1,0 +1,23 @@
+{
+    "name": "VRScienceLab.Module2.Tests",
+    "rootNamespace": "VRScienceLab.Module2.Tests",
+    "references": [
+        "VRScienceLab.Module2.Runtime",
+        "Unity.XR.Interaction.Toolkit",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

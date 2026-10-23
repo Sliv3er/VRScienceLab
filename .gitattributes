@@ -1,0 +1,13 @@
+* text=auto eol=lf
+*.cs text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.asmdef text eol=lf
+*.ps1 text eol=crlf
+*.unity -text merge=unityyamlmerge
+*.prefab -text merge=unityyamlmerge
+*.mat -text merge=unityyamlmerge
+*.asset -text merge=unityyamlmerge
+*.png binary
+*.jpg binary
+*.fbx binary
