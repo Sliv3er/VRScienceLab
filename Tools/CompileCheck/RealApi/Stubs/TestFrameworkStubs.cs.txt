@@ -1,0 +1,5 @@
+namespace UnityEngine.TestTools
+{
+    public class UnityTestAttribute : System.Attribute { }
+    public static class LogAssert { public static void Expect(UnityEngine.LogType type, System.Text.RegularExpressions.Regex message) { } public static void Expect(UnityEngine.LogType type, string message) { } }
+}

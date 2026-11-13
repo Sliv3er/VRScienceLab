@@ -10,6 +10,13 @@ depend on any other student's module.
 This is a training simulation, not a game: there are no scores, levels or win conditions,
 and every scientific behavior is a simple documented model (see section 10).
 
+> **Laboratory redesign.** The module now also contains the full laboratory room, the sample
+> system, the assistant robot, the scientist avatar and the screens. These are documented in
+> [`TECHNICAL_VALIDATION.md`](TECHNICAL_VALIDATION.md), which is also the evaluation checklist.
+> This README remains the reference for the four instruments, whose scripts and behaviour are
+> unchanged. Setup is now one menu command: **VR Science Lab > Module 2 > Set Up Project**
+> (it replaces the manual TextMeshPro and sample imports described in section 3).
+
 Contents
 
 1. [Purpose](#1-purpose)

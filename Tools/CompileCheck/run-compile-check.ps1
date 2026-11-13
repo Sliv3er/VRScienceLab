@@ -25,9 +25,11 @@ $refs = @("-r:$fw\mscorlib.dll", "-r:$fw\System.dll", "-r:$fw\System.Core.dll")
 $sources = @(
     (Join-Path $check "Stubs\*.cs"),
     (Join-Path $check "Harness\Program.cs"),
+    # Instrument scripts only (top-level folder). The laboratory systems and the scene builder
+    # use far more of the Unity API than the stubs cover; they are checked against the real
+    # Unity assemblies by RealApi/run-real-api-check.sh instead.
     (Join-Path $root "Assets\Module2_Equipment\Scripts\*.cs"),
-    (Join-Path $root "Assets\Module2_Equipment\Editor\*.cs"),
-    (Join-Path $root "Assets\Module2_Equipment\Tests\Runtime\*.cs")
+    (Join-Path $root "Assets\Module2_Equipment\Tests\Runtime\Module2InstrumentTests.cs")
 )
 
 function Invoke-Csc([string]$defines, [string]$exe) {

@@ -5,7 +5,9 @@
         "VRScienceLab.Module2.Runtime",
         "Unity.XR.Interaction.Toolkit",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.TextMeshPro",
+        "Unity.AI.Navigation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

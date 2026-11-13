@@ -3,13 +3,17 @@
 Group university project: an interactive VR laboratory built with Unity 6.3 LTS, C# and the
 XR Interaction Toolkit 3.x. Each student owns one module under `Assets/Module<N>_*`.
 
-This repository currently contains **Module 2 – Scientific Equipment and Its Behavior**
-(digital scale, hot plate, stopwatch, thermometer).
+This repository currently contains **Module 2 – Scientific Equipment and Its Behavior**:
+a complete laboratory room with four working instruments (digital scale, hot plate, stopwatch,
+thermometer), a sample system (create / select / move / scale / remove), an autonomous
+laboratory assistant robot on a NavMesh, a scientist avatar for the VR user and three
+world-space screens (welcome + measurement summary, sample management, robot control).
 
-* Start here: [`Assets/Module2_Equipment/Documentation/README.md`](Assets/Module2_Equipment/Documentation/README.md)
-  (setup, XR configuration, simulator testing, how every script works, integration).
+* **Evaluation checklist (requirement → implementation → how to demonstrate):**
+  [`Assets/Module2_Equipment/Documentation/TECHNICAL_VALIDATION.md`](Assets/Module2_Equipment/Documentation/TECHNICAL_VALIDATION.md)
+* Instruments in depth: [`Assets/Module2_Equipment/Documentation/README.md`](Assets/Module2_Equipment/Documentation/README.md)
 * Test checklist: [`Assets/Module2_Equipment/Documentation/TEST_CHECKLIST.md`](Assets/Module2_Equipment/Documentation/TEST_CHECKLIST.md)
-* Requirement mapping: [`Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md`](Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md)
+* Requirement mapping (instruments): [`Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md`](Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md)
 
 ## Running the project on another PC
 
@@ -39,25 +43,24 @@ git clone https://github.com/Sliv3er/VRScienceLab.git
    If the Hub offers to change the editor version, choose your installed 6000.3.x.
 2. First import takes a few minutes (packages from `Packages/manifest.json` are downloaded).
 3. A dialog asks to enable the **new Input System backends** and restart: click **Yes**.
-4. Window > TextMeshPro > **Import TMP Essential Resources**.
-5. Window > Package Manager > *XR Interaction Toolkit* > **Samples** tab: click **Import** for
-   **Starter Assets** and **XR Device Simulator**. If a dialog offers to install Shader Graph,
-   accept it.
-6. Edit > Project Settings > XR Plug-in Management > **XR Interaction Toolkit**: tick
-   **Use XR Interaction Simulator in scenes** (lets you test with keyboard and mouse).
+4. Menu bar: **VR Science Lab > Module 2 > Set Up Project**. It imports the TextMeshPro
+   essential resources and the XR Interaction Toolkit samples (Starter Assets, simulators) and
+   sets the colour space and input backend. If a dialog offers to install Shader Graph, accept it.
 
 ### 4. Build the scene and play
 
 1. Menu bar: **VR Science Lab > Module 2 > Validate Project Setup**. The Console must say
-   "Project setup looks complete"; otherwise it lists the missing step from section 3.
-2. Menu bar: **VR Science Lab > Module 2 > Build Lab Scene**. This generates
-   `Assets/Module2_Equipment/Materials`, `Prefabs` and `Scenes/Module2_Lab.unity` and opens the scene.
-3. Press **Play**. The simulator's on-screen panel shows the keys: Tab cycles head / left /
-   right controller, mouse looks, WASD moves, Grip selects (presses a button or grabs an object).
-4. Window > General > **Test Runner** > PlayMode > *Run All* to execute the 12 automated tests.
+   "Project setup looks complete".
+2. Menu bar: **VR Science Lab > Module 2 > Build Lab Scene**. This generates the materials,
+   meshes, textures, prefabs, the NavMesh and `Scenes/Module2_Lab.unity`, and opens the scene.
+3. Press **Play**. Without a headset the XR simulator is loaded automatically: mouse looks,
+   WASD moves, the on-screen panel shows the controller keys. Press **Enter** to begin.
+4. Window > General > **Test Runner** > PlayMode > *Run All* to execute the automated tests.
 
 Keyboard shortcuts without a controller: F1/F2 scale power/tare, F3/F4/F5 hot plate on/off/reset,
-F6/F7/F8 stopwatch start/pause/reset, F9/F10 thermometer measure/reset.
+F6/F7/F8 stopwatch start/pause/reset, F9/F10 thermometer measure/reset, B/N/M/K create samples,
+U/I/O/P move the selected sample, 6-0 send the robot to a station, Home resets the laboratory.
+The full list is in the evaluation checklist.
 
 ### 5. Headset (optional)
 
@@ -69,12 +72,13 @@ headset (Quest Link / SteamVR) and press Play. Full details are in the Module 2 
 
 | Symptom | Fix |
 |---|---|
-| Console: "TextMeshPro essential resources are not imported" | Step 3.4 |
-| Builder warns "Starter Assets sample not found" and the rig has no controllers | Step 3.5, then run Build Lab Scene again |
-| Nothing happens in Play mode with keyboard/mouse | Step 3.6, or add the `XR Interaction Simulator` prefab from `Assets/Samples/...` to the scene |
+| Console: "TextMeshPro essential resources are not imported" | Run *Set Up Project* (step 3.4) |
+| Builder warns "Starter Assets sample not found" and the rig has no controllers | Run *Set Up Project* (step 3.4), then Build Lab Scene again |
+| Nothing happens in Play mode with keyboard/mouse | Run *Set Up Project*, rebuild the scene; `Lab Systems/XR Simulator Loader` must reference the simulator prefab |
+| The robot does not move ("not on a NavMesh") | VR Science Lab > Module 2 > Bake NavMesh, save the scene |
 | Keys F1–F10 do nothing | Edit > Project Settings > Player > Active Input Handling must be *Input System Package (New)* or *Both* |
 | Pink materials | The project uses the Built-in render pipeline; if you switched to URP, re-run Build Lab Scene (the builder picks URP shaders automatically) |
 | A different Unity version is installed | Any 6000.0 or newer works; let the Hub upgrade the project, then re-run Build Lab Scene |
 
-`Tools/CompileCheck` contains a Roslyn-based compile and logic check that runs without Unity
+`Tools/CompileCheck` contains compile checks that run without opening the Unity editor
 (see `Tools/CompileCheck/README.md`); it is not part of the Unity project.
