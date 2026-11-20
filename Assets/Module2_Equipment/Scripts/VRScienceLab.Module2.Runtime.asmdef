@@ -3,8 +3,11 @@
     "rootNamespace": "VRScienceLab.Module2",
     "references": [
         "Unity.XR.Interaction.Toolkit",
+        "Unity.XR.CoreUtils",
         "Unity.InputSystem",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.AI.Navigation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

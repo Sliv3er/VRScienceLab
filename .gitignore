@@ -36,3 +36,4 @@ sysinfo.txt
 
 # Local compile-check scratch output (not part of the Unity project)
 /Tools/CompileCheck/out/
+/Tools/HeadlessSim/out/

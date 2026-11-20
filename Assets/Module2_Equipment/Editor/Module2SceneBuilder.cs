@@ -12,7 +12,7 @@ namespace VRScienceLab.Module2.EditorTools
 {
     /// <summary>
     /// Builds the complete Module 2 laboratory scene from code: materials, generated meshes and
-    /// textures, the laboratory architecture and furniture, the four instruments, the sample
+    /// textures, the laboratory architecture and furniture, the instruments, the storage cabinet, the sample
     /// system, the assistant robot with its NavMesh, the scientist avatar, the XR rig and the
     /// world-space interfaces.
     ///
@@ -20,7 +20,9 @@ namespace VRScienceLab.Module2.EditorTools
     ///   Module2SceneBuilder.cs              entry points, shared building blocks (this file)
     ///   Module2SceneBuilder.Materials.cs    material palette
     ///   Module2SceneBuilder.Environment.cs  room, furniture, lighting, NavMesh
-    ///   Module2SceneBuilder.Instruments.cs  digital scale, hot plate, stopwatch, thermometer
+    ///   Module2SceneBuilder.Instruments.cs  digital scale, thermometer, shared instrument parts
+    ///   Module2SceneBuilder.HeatingStation.cs  combined heating station (hot plate + stopwatch)
+    ///   Module2SceneBuilder.Cabinet.cs      storage cabinet (doors, shelves) and its labware
     ///   Module2SceneBuilder.Samples.cs      sample prefabs, tray, weights, SampleManager
     ///   Module2SceneBuilder.Robot.cs        laboratory assistant robot and its stations
     ///   Module2SceneBuilder.Interface.cs    monitors and UI panels
@@ -37,6 +39,7 @@ namespace VRScienceLab.Module2.EditorTools
         private const string PrefabFolder = ModuleRoot + "/Prefabs";
         private const string TestObjectPrefabFolder = PrefabFolder + "/TestObjects";
         private const string SamplePrefabFolder = PrefabFolder + "/Samples";
+        private const string LabwarePrefabFolder = PrefabFolder + "/Labware";
         private const string MaterialFolder = ModuleRoot + "/Materials";
 
         private const float BenchTopHeight = 0.9f;
@@ -58,6 +61,9 @@ namespace VRScienceLab.Module2.EditorTools
             public RotatableMount StopwatchMount;
             public Transform ScaleAnchor, HotPlateAnchor, ThermometerAnchor;
             public SampleManager SampleManager;
+            public CombinedHeatingStation HeatingStation;
+            public LaboratoryCabinet Cabinet;
+            public Transform CabinetRoot;
             public LabAssistantRobot Robot;
             public LabDirectory Directory;
             public LabResetController ResetController;
@@ -106,6 +112,7 @@ namespace VRScienceLab.Module2.EditorTools
 
             Transform systems = new GameObject("Lab Systems").transform;
             BuildSamples(context, systems);
+            BuildCabinetContents(context);
             BuildRobot(context);
             BuildLabSystems(context, systems);
 
@@ -206,6 +213,7 @@ namespace VRScienceLab.Module2.EditorTools
             EnsureFolder(PrefabFolder);
             EnsureFolder(TestObjectPrefabFolder);
             EnsureFolder(SamplePrefabFolder);
+            EnsureFolder(LabwarePrefabFolder);
             EnsureFolder(MaterialFolder);
         }
 

@@ -355,9 +355,11 @@ namespace VRScienceLab.Module2.Tests
             ground.transform.localScale = new Vector3(12f, 1f, 12f);
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             created.Add(wall);
-            wall.transform.SetParent(ground.transform, true);
+            // Size and place the wall in world space first: the ground is scaled, so a local scale
+            // set after parenting would be multiplied by (12, 1, 12) and cut the floor in two.
             wall.transform.position = new Vector3(-60f, 1f, -60f);
             wall.transform.localScale = new Vector3(0.4f, 2f, 5f);
+            wall.transform.SetParent(ground.transform, true);
 
             var surface = ground.AddComponent<NavMeshSurface>();
             surface.collectObjects = CollectObjects.Children;
@@ -521,7 +523,7 @@ namespace VRScienceLab.Module2.Tests
         }
 
         [UnityTest]
-        public IEnumerator LabScene_RobotReachesTheMainWorkbenchOnTheBakedNavMesh()
+        public IEnumerator LabScene_RobotReachesTheDigitalScaleOnTheBakedNavMesh()
         {
             yield return LoadLabScene();
 
@@ -539,7 +541,7 @@ namespace VRScienceLab.Module2.Tests
 
             Time.timeScale = 1f;
             Assert.AreEqual(RobotState.Arrived, robot.State);
-            Assert.AreEqual("Main Workbench", robot.DestinationName);
+            Assert.AreEqual("Digital Scale", robot.DestinationName);
         }
     }
 }

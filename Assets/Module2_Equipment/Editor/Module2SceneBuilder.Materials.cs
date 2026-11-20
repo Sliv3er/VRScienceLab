@@ -22,6 +22,8 @@ namespace VRScienceLab.Module2.EditorTools
             public Material ButtonRed, ButtonGreen, ButtonBlue, ButtonGray;
             // Samples and props
             public Material Brass, LiquidBlue, LiquidClear, LiquidRed, LiquidGreen, LiquidAmber, SampleBox, SampleLid, Cable;
+            // Cabinet labware
+            public Material TapeBlue, TapeYellow, Cardboard, RackPlastic;
             // Robot
             public Material RobotShell, RobotDark, RobotVisor, RobotStatus;
             // Scientist
@@ -111,6 +113,11 @@ namespace VRScienceLab.Module2.EditorTools
                 SampleBox = CreateMaterial("Sample_Box", new Color(0.93f, 0.94f, 0.95f), 0.5f),
                 SampleLid = CreateMaterial("Sample_BoxLid", new Color(0.12f, 0.50f, 0.72f), 0.55f),
                 Cable = CreateMaterial("Prop_Cable", new Color(0.07f, 0.07f, 0.08f), 0.35f),
+
+                TapeBlue = CreateMaterial("Labware_TapeBlue", new Color(0.14f, 0.44f, 0.86f), 0.35f),
+                TapeYellow = CreateMaterial("Labware_TapeYellow", new Color(0.96f, 0.80f, 0.18f), 0.35f),
+                Cardboard = CreateMaterial("Labware_Cardboard", new Color(0.62f, 0.50f, 0.36f), 0.1f),
+                RackPlastic = CreateMaterial("Labware_RackPlastic", new Color(0.20f, 0.52f, 0.72f), 0.45f),
 
                 RobotShell = CreateMaterial("Robot_Shell", new Color(0.93f, 0.94f, 0.95f), 0.7f),
                 RobotDark = CreateMaterial("Robot_Dark", new Color(0.14f, 0.16f, 0.19f), 0.6f, 0.3f),

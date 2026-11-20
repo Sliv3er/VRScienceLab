@@ -5,7 +5,8 @@ namespace VRScienceLab.Module2
 {
     /// <summary>
     /// Puts the laboratory back in its initial state: instruments off and zeroed, samples
-    /// back to the initial set, loose objects back in place, robot back at its dock.
+    /// back to the initial set, loose objects and cabinet equipment back in place, cabinet
+    /// doors closed, robot back at its starting position.
     /// Each instrument is reset through its own public API; they stay independent of each other.
     /// </summary>
     [AddComponentMenu("VR Science Lab/Module 2/Lab Reset Controller")]
@@ -22,6 +23,8 @@ namespace VRScienceLab.Module2
         [SerializeField] private LabAssistantRobot robot;
         [SerializeField] private MeasurementLog measurementLog;
         [SerializeField] private RotatableMount[] mounts = new RotatableMount[0];
+        [SerializeField, Tooltip("Storage cabinet whose doors are closed by a full reset.")]
+        private LaboratoryCabinet cabinet;
 
         [Tooltip("Raised after a reset so interfaces can refresh.")]
         public UnityEvent onLabReset = new UnityEvent();
@@ -75,7 +78,8 @@ namespace VRScienceLab.Module2
             ResetInstruments();
             ResetLooseObjects();
             if (sampleManager != null) sampleManager.ResetSamples();
-            if (robot != null) robot.ReturnToDock();
+            if (cabinet != null) cabinet.CloseDoors();
+            if (robot != null) robot.ReturnToStart();
             if (measurementLog != null) measurementLog.Clear();
 
             ResetCount++;

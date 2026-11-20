@@ -27,10 +27,27 @@ namespace VRScienceLab.Module2.EditorTools
         private static readonly Color UiButtonGo = new Color(0.14f, 0.50f, 0.30f, 1f);
 
         private static Sprite uiSprite;
+        private static Camera uiEventCamera;
 
         private static void BuildInterface(BuildContext context)
         {
             uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+
+            // Event camera of the world-space canvases: the headset camera of the XR rig.
+            uiEventCamera = null;
+            if (context.XRRig != null)
+            {
+                foreach (Camera camera in context.XRRig.GetComponentsInChildren<Camera>(true))
+                {
+                    if (camera.CompareTag("MainCamera") || uiEventCamera == null) uiEventCamera = camera;
+                }
+            }
+
+            if (uiEventCamera == null)
+            {
+                Debug.LogWarning("[Module2SceneBuilder] No camera found for the interface canvases; they fall back to Camera.main at runtime.");
+            }
+
             Transform root = new GameObject("Interface").transform;
 
             RectTransform center = CreateMonitor(context.Palette, root, "Main Display", new Vector3(0f, 1.9f, 1.12f), 0f, -6f, new Vector2(1500f, 840f), 0.9f, false);
@@ -108,7 +125,17 @@ namespace VRScienceLab.Module2.EditorTools
             canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.Normal | AdditionalCanvasShaderChannels.Tangent;
             var scaler = canvasObject.AddComponent<CanvasScaler>();
             scaler.dynamicPixelsPerUnit = 2f;
+
+            // Two raycasters, exactly like XRI's own "GameObject > XR > UI Canvas":
+            // - GraphicRaycaster answers ordinary pointer events. The XR Interaction Simulator uses
+            //   it to recognise a mouse click on a screen as a UI press; without it a click on a
+            //   button is sent as a grip press and the button never fires. It also makes a plain
+            //   mouse click work when no simulator is running.
+            // - TrackedDeviceGraphicRaycaster answers the controller rays.
+            // Both need an event camera on a world-space canvas.
+            canvasObject.AddComponent<GraphicRaycaster>();
             canvasObject.AddComponent<TrackedDeviceGraphicRaycaster>();
+            canvas.worldCamera = uiEventCamera;
 
             Image background = canvasObject.AddComponent<Image>();
             background.color = UiBackground;
@@ -245,8 +272,8 @@ namespace VRScienceLab.Module2.EditorTools
             UiText("Title", welcome, 80f, 108f, 1340f, 100f, "Scientific Equipment and Its Behavior", 76f, UiTextColor, FontStyles.Bold);
             UiText("Subtitle", welcome, 80f, 218f, 1340f, 44f, "Module 2   |   Measurement training session", 32f, UiMuted);
 
-            string[] names = { "Digital scale", "Hot plate", "Stopwatch", "Thermometer" };
-            string[] details = { "Mass of a sample, with tare", "Controlled heating up to 300 °C", "Elapsed time to 0.01 s", "Sample temperature by probe" };
+            string[] names = { "Digital scale", "Heating station", "Thermometer", "Storage cabinet" };
+            string[] details = { "Mass of a sample, with tare", "Hot plate up to 300 °C with a built-in timer", "Sample temperature by probe", "Glassware to take out and put back" };
             for (int i = 0; i < 4; i++)
             {
                 Image card = UiImage("Instrument Card " + (i + 1), welcome, 80f + i * 340f, 300f, 320f, 190f, UiCard);
@@ -255,7 +282,7 @@ namespace VRScienceLab.Module2.EditorTools
                 UiText("Detail", card.transform, 24f, 112f, 280f, 70f, details[i], 24f, UiMuted);
             }
 
-            UiText("How A", welcome, 80f, 528f, 1340f, 38f, "Ray + Grip presses the instrument buttons and grabs the samples.  Ray + Trigger operates the screens.", 27f, UiTextColor);
+            UiText("How A", welcome, 80f, 528f, 1340f, 38f, "Ray + Grip presses the instrument buttons, opens the cabinet doors and grabs objects.  Ray + Trigger operates the screens.", 27f, UiTextColor);
             UiText("How B", welcome, 80f, 572f, 1340f, 38f, "The side screens create samples and send the laboratory assistant robot to a station.", 27f, UiMuted);
 
             Button begin = UiButton("Begin Button", welcome, 80f, 660f, 440f, 110f, "BEGIN SESSION", UiButtonPrimary, 40f);
@@ -269,8 +296,8 @@ namespace VRScienceLab.Module2.EditorTools
             OnClick(home, welcomePanel.ShowWelcome);
 
             TextMeshProUGUI scaleValue = UiTile(session, 60f, 116f, 330f, 132f, "DIGITAL SCALE", "OFF");
-            TextMeshProUGUI plateValue = UiTile(session, 410f, 116f, 330f, 132f, "HOT PLATE", "20.0 °C");
-            TextMeshProUGUI timeValue = UiTile(session, 760f, 116f, 330f, 132f, "STOPWATCH", "00:00.00");
+            TextMeshProUGUI plateValue = UiTile(session, 410f, 116f, 330f, 132f, "HEATING STATION", "20.0 °C");
+            TextMeshProUGUI timeValue = UiTile(session, 760f, 116f, 330f, 132f, "STATION TIMER", "00:00.00");
             TextMeshProUGUI thermoValue = UiTile(session, 1110f, 116f, 330f, 132f, "THERMOMETER", "OFF");
 
             UiText("Table Header", session, 60f, 276f, 1380f, 32f,
@@ -345,7 +372,7 @@ namespace VRScienceLab.Module2.EditorTools
             selected.lineSpacing = 8f;
 
             UiSectionLabel(canvas, 40f, 506f, "MOVE THE SELECTED SAMPLE TO");
-            string[] moveLabels = { "SCALE PAN", "HOT PLATE", "THERMOMETER" };
+            string[] moveLabels = { "SCALE PAN", "HEATING PLATE", "THERMOMETER" };
             for (int i = 0; i < moveLabels.Length; i++)
             {
                 Button move = UiButton("Move To " + moveLabels[i], canvas, 40f + i * 235f, 536f, 215f, 74f, moveLabels[i], UiButtonColor, 24f);
@@ -379,53 +406,86 @@ namespace VRScienceLab.Module2.EditorTools
             LabAssistantRobot robot = context.Robot;
             LabDirectory directory = context.Directory;
 
-            UiText("Header", canvas, 40f, 30f, 920f, 52f, "LABORATORY ASSISTANT", 40f, UiTextColor, FontStyles.Bold);
-
-            TextMeshProUGUI state = UiTile(canvas, 40f, 92f, 300f, 112f, "STATE", "IDLE", 40f);
-            TextMeshProUGUI destination = UiTile(canvas, 355f, 92f, 385f, 112f, "DESTINATION", "none", 40f);
-            TextMeshProUGUI distance = UiTile(canvas, 755f, 92f, 205f, 112f, "DISTANCE", "0.0 m", 40f);
-
-            UiSectionLabel(canvas, 40f, 220f, "SEND THE ROBOT TO A STATION");
-            SerializedProperty stations = new SerializedObject(robot).FindProperty("stations");
-            for (int i = 0; i < stations.arraySize && i < 5; i++)
-            {
-                var station = stations.GetArrayElementAtIndex(i).objectReferenceValue as RobotStation;
-                string label = station != null ? station.StationName.ToUpperInvariant() : "STATION " + (i + 1);
-                float x = 40f + (i % 3) * 313f;
-                float y = 250f + (i / 3) * 86f;
-                Button go = UiButton("Go To " + label, canvas, x, y, 293f, 74f, label, UiButtonPrimary, 24f);
-                OnClick(go, robot.GoToStation, i);
-            }
-
-            Button next = UiButton("Next Station", canvas, 666f, 336f, 293f, 74f, "NEXT STATION", UiButtonColor, 24f);
-            OnClick(next, robot.GoToNextStation);
-
-            Button stop = UiButton("Stop", canvas, 40f, 426f, 293f, 74f, "STOP", UiButtonDanger, 26f);
-            Button resume = UiButton("Resume", canvas, 353f, 426f, 293f, 74f, "RESUME", UiButtonGo, 26f);
-            Button tour = UiButton("Tour", canvas, 666f, 426f, 293f, 74f, "AUTO TOUR", UiButtonColor, 24f);
-            OnClick(stop, robot.Stop);
-            OnClick(resume, robot.Resume);
-            OnClick(tour, robot.ToggleTour);
-
+            // Every button calls the RobotControlPanel, which shows the command it received and the
+            // robot's answer, then forwards it to the robot.
             var robotPanel = canvas.gameObject.AddComponent<RobotControlPanel>();
             SetReference(robotPanel, "robot", robot);
+
+            UiText("Header", canvas, 40f, 26f, 700f, 52f, "LABORATORY ASSISTANT", 40f, UiTextColor, FontStyles.Bold);
+            TextMeshProUGUI navigation = UiText("Navigation", canvas, 700f, 36f, 260f, 34f, "NAVMESH OK", 21f, UiMuted, FontStyles.Bold, TextAlignmentOptions.Right);
+
+            TextMeshProUGUI state = UiTile(canvas, 40f, 84f, 300f, 104f, "STATE", "IDLE", 38f);
+            TextMeshProUGUI destination = UiTile(canvas, 355f, 84f, 385f, 104f, "DESTINATION", "none", 38f);
+            TextMeshProUGUI distance = UiTile(canvas, 755f, 84f, 205f, 104f, "DISTANCE", "0.0 m", 38f);
+
+            // ---- Main destinations (two rows of two large buttons).
+            UiSectionLabel(canvas, 40f, 198f, "SEND THE ROBOT TO");
+            int stationCount = new SerializedObject(robot).FindProperty("stations").arraySize;
+            var stationGraphics = new Object[stationCount];
+            int[] mainStations = { RobotStationScale, RobotStationHeating, RobotStationCabinet, RobotStationWorkbench };
+            for (int i = 0; i < mainStations.Length; i++)
+            {
+                int station = mainStations[i];
+                string label = "GO TO " + RobotStationSpecs[station].Name.ToUpperInvariant();
+                float x = 40f + (i % 2) * 465f;
+                float y = 226f + (i / 2) * 78f;
+                Button go = UiButton(label, canvas, x, y, 455f, 68f, label, UiButtonPrimary, 25f);
+                OnClick(go, robotPanel.GoToStation, station);
+                stationGraphics[station] = go.targetGraphic;
+            }
+
+            // ---- Stop and return.
+            Button stop = UiButton("STOP ROBOT", canvas, 40f, 382f, 300f, 72f, "STOP ROBOT", UiButtonDanger, 27f);
+            Button home = UiButton("RETURN TO STARTING POSITION", canvas, 350f, 382f, 610f, 72f, "RETURN TO STARTING POSITION", UiButtonGo, 25f);
+            OnClick(stop, robotPanel.StopRobot);
+            OnClick(home, robotPanel.ReturnToStart);
+            stationGraphics[RobotStationStart] = home.targetGraphic;
+
+            // ---- Secondary controls: resume, the two extra stations, automatic tour.
+            Button resume = UiButton("RESUME", canvas, 40f, 464f, 222f, 54f, "RESUME", UiButtonColor, 21f);
+            OnClick(resume, robotPanel.ResumeRobot);
+            float extraX = 272f;
+            for (int station = RobotStationWorkbench + 1; station < stationCount && station < RobotStationSpecs.Length; station++)
+            {
+                string label = RobotStationSpecs[station].Name.ToUpperInvariant();
+                Button extra = UiButton("GO TO " + label, canvas, extraX, 464f, 222f, 54f, label, UiButtonColor, 21f);
+                OnClick(extra, robotPanel.GoToStation, station);
+                stationGraphics[station] = extra.targetGraphic;
+                extraX += 232f;
+            }
+
+            Button tour = UiButton("AUTO TOUR", canvas, 736f, 464f, 224f, 54f, "AUTO TOUR", UiButtonColor, 21f);
+            OnClick(tour, robotPanel.ToggleTour);
+
+            // ---- Last command and the robot's answer.
+            UiImage("Command Card", canvas, 40f, 528f, 920f, 46f, UiCard);
+            TextMeshProUGUI command = UiText("Command", canvas, 58f, 534f, 884f, 34f, "Press a button to send the robot to a station.", 21f, UiAccent, FontStyles.Bold, TextAlignmentOptions.Left);
+            command.textWrappingMode = TextWrappingModes.NoWrap;
+            command.enableAutoSizing = true;
+            command.fontSizeMax = 21f;
+            command.fontSizeMin = 13f;
+
             SetReference(robotPanel, "stateText", state);
             SetReference(robotPanel, "destinationText", destination);
             SetReference(robotPanel, "distanceText", distance);
+            SetReference(robotPanel, "commandText", command);
+            SetReference(robotPanel, "navigationText", navigation);
+            SetReferences(robotPanel, "stationButtonGraphics", stationGraphics);
 
-            UiSectionLabel(canvas, 40f, 520f, "FIND IN THE LABORATORY");
-            string[] findLabels = { "SCALE", "HOT PLATE", "STOPWATCH", "THERMOMETER" };
+            // ---- Find in the laboratory (scene search).
+            UiSectionLabel(canvas, 40f, 586f, "FIND IN THE LABORATORY");
+            string[] findLabels = { "SCALE", "HEATER", "TIMER", "THERMOMETER" };
             for (int i = 0; i < findLabels.Length; i++)
             {
-                Button find = UiButton("Find " + findLabels[i], canvas, 40f + i * 187f, 550f, 172f, 66f, findLabels[i], UiButtonColor, 21f);
+                Button find = UiButton("Find " + findLabels[i], canvas, 40f + i * 187f, 612f, 172f, 50f, findLabels[i], UiButtonColor, 20f);
                 OnClick(find, directory.LocateInstrument, i);
             }
 
-            Button heaviest = UiButton("Find Heaviest", canvas, 788f, 550f, 172f, 66f, "HEAVIEST", UiButtonColor, 21f);
+            Button heaviest = UiButton("Find Heaviest", canvas, 788f, 612f, 172f, 50f, "HEAVIEST", UiButtonColor, 20f);
             OnClick(heaviest, directory.LocateHeaviestSample);
 
-            UiImage("Report Card", canvas, 40f, 630f, 920f, 96f, UiCard);
-            TextMeshProUGUI report = UiText("Report", canvas, 60f, 640f, 880f, 78f, "Press a button to search the scene for an instrument or a sample.", 22f, UiTextColor);
+            UiImage("Report Card", canvas, 40f, 670f, 920f, 68f, UiCard);
+            TextMeshProUGUI report = UiText("Report", canvas, 58f, 676f, 884f, 58f, "Press a button to search the scene for an instrument or a sample.", 20f, UiTextColor);
             var reportDisplay = report.gameObject.AddComponent<StatusTextDisplay>();
             SetReference(reportDisplay, "target", report);
             UnityEventTools.AddPersistentListener(directory.onSearchCompleted, reportDisplay.Show);

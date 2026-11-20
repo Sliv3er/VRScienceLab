@@ -8,7 +8,8 @@ namespace VRScienceLab.Module2
     /// <summary>
     /// Editor/desktop debugging helper. It is not needed in VR.
     /// - Keyboard shortcuts call the instrument methods directly.
-    /// - A left mouse click casts a ray from the camera and presses the <see cref="InstrumentButton"/> it hits.
+    /// - A left mouse click casts a ray from the camera and presses the <see cref="InstrumentButton"/>
+    ///   or toggles the <see cref="CabinetDoor"/> it hits.
     /// Requires the Input System package with the Input System backend active (ENABLE_INPUT_SYSTEM).
     /// </summary>
     [AddComponentMenu("VR Science Lab/Module 2/Debug Input (keyboard + mouse)")]
@@ -120,7 +121,15 @@ namespace VRScienceLab.Module2
             if (!Physics.Raycast(ray, out RaycastHit hit, maxClickDistance, clickLayers, QueryTriggerInteraction.Ignore)) return;
 
             InstrumentButton button = hit.collider.GetComponentInParent<InstrumentButton>();
-            if (button != null) button.Press();
+            if (button != null)
+            {
+                button.Press();
+                return;
+            }
+
+            // Cabinet doors are operated the same way (ray + select in VR, click on the desktop).
+            CabinetDoor door = hit.collider.GetComponentInParent<CabinetDoor>();
+            if (door != null) door.Press();
         }
 #endif
     }

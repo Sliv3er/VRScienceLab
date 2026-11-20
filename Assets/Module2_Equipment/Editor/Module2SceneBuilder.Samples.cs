@@ -14,7 +14,7 @@ namespace VRScienceLab.Module2.EditorTools
         // Glassware visuals (shared by the sample prefabs and the decoration)
         // ------------------------------------------------------------------
 
-        /// <summary>Beaker: 68 mm wide, 95 mm tall, thin glass wall with a flared lip. Origin at the base.</summary>
+        /// <summary>Beaker: 68 mm wide, 95 mm tall, thin glass wall with a flared lip. Origin at the base. A null liquid gives empty glassware.</summary>
         private static void BuildBeakerVisual(Transform parent, Palette palette, Material liquid, float fill)
         {
             Lathe("Glass", parent, "BeakerGlass", new[]
@@ -24,11 +24,14 @@ namespace VRScienceLab.Module2.EditorTools
                 new Vector2(0.0322f, 0.004f), new Vector2(0f, 0.004f),
             }, Vector3.zero, palette.Glass, 36);
 
-            float level = Mathf.Lerp(0.012f, 0.082f, Mathf.Clamp01(fill));
-            Lathe("Liquid", parent, "BeakerLiquid_" + Mathf.RoundToInt(level * 1000f), new[]
+            if (liquid != null)
             {
-                new Vector2(0f, 0.0045f), new Vector2(0.0316f, 0.0045f), new Vector2(0.0316f, level), new Vector2(0f, level),
-            }, Vector3.zero, liquid, 28);
+                float level = Mathf.Lerp(0.012f, 0.082f, Mathf.Clamp01(fill));
+                Lathe("Liquid", parent, "BeakerLiquid_" + Mathf.RoundToInt(level * 1000f), new[]
+                {
+                    new Vector2(0f, 0.0045f), new Vector2(0.0316f, 0.0045f), new Vector2(0.0316f, level), new Vector2(0f, level),
+                }, Vector3.zero, liquid, 28);
+            }
 
             for (int i = 1; i <= 3; i++)
             {
@@ -45,6 +48,8 @@ namespace VRScienceLab.Module2.EditorTools
                 new Vector2(0.0135f, 0.115f), new Vector2(0.016f, 0.12f), new Vector2(0.0145f, 0.12f), new Vector2(0.012f, 0.115f),
                 new Vector2(0.012f, 0.086f), new Vector2(0.038f, 0.005f), new Vector2(0f, 0.005f),
             }, Vector3.zero, palette.Glass, 36);
+
+            if (liquid == null) return;
 
             float level = Mathf.Lerp(0.015f, 0.07f, Mathf.Clamp01(fill));
             float radiusAtLevel = Mathf.Lerp(0.0375f, 0.012f, (level - 0.005f) / 0.081f);
@@ -63,6 +68,8 @@ namespace VRScienceLab.Module2.EditorTools
                 new Vector2(0.009f, 0.106f), new Vector2(0.0102f, 0.11f), new Vector2(0.0092f, 0.11f), new Vector2(0.0078f, 0.106f),
                 new Vector2(0.0078f, 0.011f), new Vector2(0.0068f, 0.006f), new Vector2(0f, 0.002f),
             }, Vector3.zero, palette.Glass, 20);
+
+            if (liquid == null) return;
 
             float level = Mathf.Lerp(0.02f, 0.09f, Mathf.Clamp01(fill));
             Lathe("Liquid", parent, "TestTubeLiquid_" + Mathf.RoundToInt(level * 1000f), new[]
@@ -297,7 +304,9 @@ namespace VRScienceLab.Module2.EditorTools
             CreateWeight(palette, metal, testObjects, "Weight_250g", "250 g", 0.25f, 0.025f, new Vector3(-1.6f, BenchTopHeight + 0.01f, 0.5f));
             CreateWeight(palette, metal, testObjects, "Weight_500g", "500 g", 0.5f, 0.031f, new Vector3(-1.46f, BenchTopHeight + 0.01f, 0.5f));
             CreateDropBall(palette, rubber, testObjects, new Vector3(-1.6f, BenchTopHeight + 0.01f, 0.64f));
-            BuildEquipmentCart(palette, metal, testObjects, new Vector3(1.95f, 0f, -1.35f));
+            // Parked against the left wall between the storage cabinets and the fume hood, clear of every
+            // robot station: the cart carves the NavMesh, so a cart parked on a stop point makes it unreachable.
+            BuildEquipmentCart(palette, metal, testObjects, new Vector3(-4.08f, 0f, -2.12f));
 
             // Sample prefabs (index order is used by the interface buttons and keyboard shortcuts).
             LabSample[] prefabs =

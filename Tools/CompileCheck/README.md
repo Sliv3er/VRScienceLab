@@ -33,5 +33,21 @@ the instrument tests in a console process. It needs no Unity installation at all
 powershell -ExecutionPolicy Bypass -File Tools/CompileCheck/run-compile-check.ps1
 ```
 
-Neither check replaces opening the project in Unity and running the PlayMode tests
+## 3. Assembly definition references
+
+`check-asmdef-references.py` checks that every `.asmdef` of the module references the assemblies
+its code uses (for example `UnityEngine.UI` when a script uses a uGUI or TextMeshPro type). The
+two checks above compile everything in one go and cannot see a missing reference; in Unity it is
+a compile error.
+
+```bash
+python Tools/CompileCheck/check-asmdef-references.py
+```
+
+## 4. Headless simulation
+
+`Tools/HeadlessSim` goes further than compiling: it executes the scene builder, plays the scene
+and runs the PlayMode tests against a functional stand-in for the engine. See its README.
+
+None of these checks replaces opening the project in Unity and running the PlayMode tests
 (Window > General > Test Runner).

@@ -22,19 +22,30 @@ namespace VRScienceLab.Module2.EditorTools
             }
         }
 
+        // Index 0 is the robot's starting position (charging dock). Yaw is the direction the robot
+        // faces when parked. The order is part of the module's contract: the control screen, the
+        // keyboard shortcuts (digit keys 6-0) and the tests address the stations by index.
+        //
+        // Every stop point lies at least 0.5 m (the NavMesh agent radius) away from furniture, and
+        // clear of the user's start position and of the equipment cart, which both carve the NavMesh.
+        private const int RobotStationStart = 0, RobotStationScale = 1, RobotStationHeating = 2, RobotStationCabinet = 3, RobotStationWorkbench = 4;
+
+        private static readonly StationSpec[] RobotStationSpecs =
+        {
+            new StationSpec("Starting Position", 3.3f, -4.15f, 0f),
+            new StationSpec("Digital Scale", -0.95f, -0.8f, 0f),
+            new StationSpec("Heating Station", 0.7f, -1.05f, -24f),
+            new StationSpec("Storage Cabinet", -3.15f, -0.3f, -90f),
+            new StationSpec("Laboratory Workbench", 1.45f, -0.8f, 0f),
+            new StationSpec("Analysis Desk", 2.55f, -2.0f, 90f),
+            new StationSpec("Fume Hood", -2.85f, -3.35f, -90f),
+        };
+
         private static void BuildRobot(BuildContext context)
         {
             Palette palette = context.Palette;
 
-            // Index 0 is the charging dock. Yaw is the direction the robot faces when parked.
-            StationSpec[] specs =
-            {
-                new StationSpec("Charging Dock", 3.3f, -4.15f, 0f),
-                new StationSpec("Main Workbench", -1.45f, -0.65f, 0f),
-                new StationSpec("Sample Storage", -3.15f, -0.3f, -90f),
-                new StationSpec("Analysis Desk", 2.55f, -2.0f, 90f),
-                new StationSpec("Fume Hood", -2.85f, -3.35f, -90f),
-            };
+            StationSpec[] specs = RobotStationSpecs;
 
             Transform stationsRoot = new GameObject("Robot Stations").transform;
             var stations = new Object[specs.Length];
@@ -166,6 +177,29 @@ namespace VRScienceLab.Module2.EditorTools
 
             var assistant = robot.AddComponent<LabAssistantRobot>();
             SetReferences(assistant, "stations", stations);
+
+            // Route line on the floor while the robot drives (visual indication of the destination).
+            // The line keeps the default view alignment (it always faces the camera), so it is
+            // visible from any standing position and in both eyes of a headset.
+            GameObject pathObject = CreateChild("Path Indicator", stationsRoot, Vector3.zero);
+            var line = pathObject.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.widthMultiplier = 0.045f;
+            line.numCornerVertices = 4;
+            line.numCapVertices = 4;
+            line.positionCount = 0;
+            line.sharedMaterial = palette.Accent;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.enabled = false;
+            var pathIndicator = pathObject.AddComponent<RobotPathIndicator>();
+            SetReference(pathIndicator, "robot", assistant);
+
+            // Safety net: if the scene ever starts without baked NavMesh data, it is built at start.
+            if (context.Environment != null && context.Environment.GetComponent<NavMeshRuntimeBaker>() == null)
+            {
+                context.Environment.gameObject.AddComponent<NavMeshRuntimeBaker>();
+            }
 
             var animator = robot.AddComponent<RobotVisualAnimator>();
             SetReference(animator, "robot", assistant);

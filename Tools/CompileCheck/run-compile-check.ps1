@@ -29,6 +29,8 @@ $sources = @(
     # use far more of the Unity API than the stubs cover; they are checked against the real
     # Unity assemblies by RealApi/run-real-api-check.sh instead.
     (Join-Path $root "Assets\Module2_Equipment\Scripts\*.cs"),
+    # Referenced by Module2DebugInput (mouse click on a cabinet door).
+    (Join-Path $root "Assets\Module2_Equipment\Scripts\Cabinet\CabinetDoor.cs"),
     (Join-Path $root "Assets\Module2_Equipment\Tests\Runtime\Module2InstrumentTests.cs")
 )
 

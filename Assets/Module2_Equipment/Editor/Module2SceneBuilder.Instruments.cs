@@ -3,10 +3,12 @@ using UnityEngine;
 
 namespace VRScienceLab.Module2.EditorTools
 {
-    // The four instruments. Each one is a self-contained prefab: housing, console with a tilted
-    // backlit display, push buttons, status LED, nameplate and a small hint sign. The behaviour
-    // scripts (DigitalScale, HotPlate, StopwatchTimer, Thermometer) are wired exactly as before;
-    // the additions are visual (InstrumentStateVisuals, ZoneIndicator, RotatableMount).
+    // The instruments on the main workbench: the digital scale, the combined heating station
+    // (hot plate + stopwatch in one housing, see Module2SceneBuilder.HeatingStation.cs) and the
+    // thermometer. Each one is a self-contained prefab: housing, console with a tilted backlit
+    // display, push buttons, status LED, nameplate and a small hint sign. The behaviour scripts
+    // (DigitalScale, HotPlate, StopwatchTimer, Thermometer) are wired exactly as before; the
+    // additions are visual (InstrumentStateVisuals, ZoneIndicator, RotatableMount).
     public static partial class Module2SceneBuilder
     {
         // Console slope: 50 degrees from horizontal, so the display faces a standing user.
@@ -20,8 +22,7 @@ namespace VRScienceLab.Module2.EditorTools
         {
             Palette palette = context.Palette;
             context.Scale = BuildDigitalScale(context, palette, parent, new Vector3(-0.95f, BenchTopHeight, InstrumentRowZ));
-            context.HotPlate = BuildHotPlate(context, palette, parent, new Vector3(-0.32f, BenchTopHeight, InstrumentRowZ));
-            context.Stopwatch = BuildStopwatch(context, palette, parent, new Vector3(0.32f, BenchTopHeight, InstrumentRowZ));
+            BuildHeatingStation(context, palette, parent, new Vector3(0f, BenchTopHeight, InstrumentRowZ));
             context.Thermometer = BuildThermometer(context, palette, parent, new Vector3(0.95f, BenchTopHeight, InstrumentRowZ));
         }
 
@@ -184,156 +185,6 @@ namespace VRScienceLab.Module2.EditorTools
             context.ScaleAnchor = CreateChild("SampleAnchor", root.transform, new Vector3(0f, bodyTop + 0.024f, panZ)).transform;
             SaveAsPrefab(root, PrefabFolder, "DigitalScale");
             return scale;
-        }
-
-        // ------------------------------------------------------------------
-        // Hot plate
-        // ------------------------------------------------------------------
-
-        private static HotPlate BuildHotPlate(BuildContext context, Palette palette, Transform parent, Vector3 position)
-        {
-            GameObject root = CreateRoot("HotPlate", parent, position);
-            var hotPlate = root.AddComponent<HotPlate>();
-            SetString(hotPlate, "instrumentName", "Hot Plate");
-
-            const float bodyTop = 0.077f;
-            const float plateZ = 0.07f;
-            CreateFeet(root.transform, palette, 0.145f, 0.165f);
-            Bevel("Body", root.transform, new Vector3(0f, 0.007f, 0f), new Vector3(0.36f, 0.07f, 0.40f), 0.03f, 0.006f, palette.Body, true);
-
-            // Ceramic top with the heating zone (its emission follows the temperature).
-            Bevel("CeramicTop", root.transform, new Vector3(0f, bodyTop, plateZ), new Vector3(0.25f, 0.012f, 0.25f), 0.012f, 0.003f, palette.Ceramic, true);
-            GameObject element = Lathe("HeatingElement", root.transform, "HotPlateElement", CylinderProfile(0.1f, 0.0016f, 0.0005f), new Vector3(0f, bodyTop + 0.012f, plateZ), palette.HeatingElement, 48);
-            for (int i = 1; i <= 3; i++)
-            {
-                Lathe("HeatingRing", root.transform, "HotPlateRing" + i, RingProfile(0.028f * i + 0.002f, 0.028f * i, 0.0004f), new Vector3(0f, bodyTop + 0.0138f, plateZ), palette.DarkPlastic, 40);
-            }
-
-            GameObject sign = Box("HotSurfaceSign", root.transform, new Vector3(-0.148f, bodyTop + 0.0006f, -0.012f), new Vector3(0.04f, 0.001f, 0.04f), palette.Warning, false);
-            sign.name = "HotSurfaceSign";
-
-            for (int side = -1; side <= 1; side += 2)
-            {
-                for (int slot = 0; slot < 5; slot++)
-                {
-                    Box("Vent", root.transform, new Vector3(side * 0.1803f, 0.042f, 0.02f + slot * 0.03f), new Vector3(0.002f, 0.03f, 0.012f), palette.DarkPlastic, false);
-                }
-            }
-
-            var lightObject = new GameObject("HeatLight");
-            lightObject.transform.SetParent(root.transform, false);
-            lightObject.transform.localPosition = new Vector3(0f, 0.2f, plateZ);
-            Light heatLight = lightObject.AddComponent<Light>();
-            heatLight.type = LightType.Point;
-            heatLight.color = new Color(1f, 0.45f, 0.15f);
-            heatLight.range = 0.7f;
-            heatLight.intensity = 0f;
-            heatLight.shadows = LightShadows.None;
-            heatLight.enabled = false;
-
-            var consoleBase = new Vector3(0f, bodyTop, -0.075f);
-            CreateConsole(root.transform, palette, consoleBase, 0.34f);
-            DisplayParts display = CreateConsoleDisplay(root.transform, palette, consoleBase, -0.065f, new Vector2(0.17f, 0.07f), "20.0 °C");
-            Renderer led = CreateConsoleLed(root.transform, palette, consoleBase, 0.05f);
-            Renderer strip = CreateAccentStrip(root.transform, palette, new Vector3(0f, bodyTop + 0.003f, -0.112f), 0.31f);
-
-            // Temperature knob on the console (decorative control, turned to match the slope).
-            GameObject knob = Lathe("Knob", root.transform, "HotPlateKnob", new[]
-            {
-                new Vector2(0f, 0f), new Vector2(0.024f, 0f), new Vector2(0.026f, 0.003f), new Vector2(0.022f, 0.02f),
-                new Vector2(0.019f, 0.023f), new Vector2(0f, 0.023f),
-            }, OnConsoleSlope(consoleBase, 0.115f, 0.0005f), palette.DarkPlastic, 28);
-            knob.transform.localRotation = Quaternion.Euler(-ConsoleSlopeDegrees, 0f, 0f);
-            Box("KnobMark", knob.transform, new Vector3(0f, 0.0235f, 0.011f), new Vector3(0.003f, 0.001f, 0.014f), palette.Accent, false);
-
-            InstrumentButton on = CreateButton("OnButton", "ON", root.transform, new Vector3(-0.1f, bodyTop, -0.16f), palette.ButtonGreen, palette);
-            InstrumentButton off = CreateButton("OffButton", "OFF", root.transform, new Vector3(0f, bodyTop, -0.16f), palette.ButtonRed, palette);
-            InstrumentButton reset = CreateButton("ResetButton", "RESET", root.transform, new Vector3(0.1f, bodyTop, -0.16f), palette.ButtonGray, palette);
-            CreateNameplate(root.transform, "HOT PLATE   20 - 300 °C", new Vector3(0f, 0.04f, -0.2012f), 0.2f, palette);
-            TMPro.TextMeshPro hint = CreateHintSign(root.transform, palette, new Vector3(0f, 0f, -0.245f), 0.34f, "Press ON to start heating");
-
-            SetReference(hotPlate, "valueDisplay", display.Value);
-            SetReference(hotPlate, "stateDisplay", display.State);
-            SetReference(hotPlate, "statusIndicator", led);
-            SetReference(hotPlate, "heatingElementRenderer", element.GetComponent<Renderer>());
-            SetReference(hotPlate, "heatingLight", heatLight);
-
-            Connect(on, hotPlate.SwitchOn);
-            Connect(off, hotPlate.SwitchOff);
-            Connect(reset, hotPlate.ResetTemperature);
-
-            AddStateVisuals(root, hotPlate, hint, new[] { display.Backlight, strip }, new[] { "OFF" },
-                "COOLING", "Cooling down. The surface may still be hot",
-                "OFF", "Press ON to start heating",
-                "HEATING", "Heating at 10 °C per second. OFF stops, RESET returns to 20 °C",
-                "MAX", "Maximum temperature reached. Press OFF to cool down");
-
-            context.HotPlateAnchor = CreateChild("SampleAnchor", root.transform, new Vector3(0f, bodyTop + 0.02f, plateZ)).transform;
-            SaveAsPrefab(root, PrefabFolder, "HotPlate");
-            return hotPlate;
-        }
-
-        // ------------------------------------------------------------------
-        // Stopwatch (bench timer with a swivel head)
-        // ------------------------------------------------------------------
-
-        private static StopwatchTimer BuildStopwatch(BuildContext context, Palette palette, Transform parent, Vector3 position)
-        {
-            GameObject root = CreateRoot("Stopwatch", parent, position);
-            var stopwatch = root.AddComponent<StopwatchTimer>();
-            SetString(stopwatch, "instrumentName", "Stopwatch");
-
-            const float baseTop = 0.03f;
-            CreateFeet(root.transform, palette, 0.11f, 0.085f);
-            Bevel("Body", root.transform, new Vector3(0f, 0.007f, 0f), new Vector3(0.28f, 0.023f, 0.22f), 0.03f, 0.005f, palette.Body, true);
-
-            // Swivel: turntable + neck + display head. RotatableMount turns it in 15 degree steps.
-            Transform swivel = CreateChild("Swivel", root.transform, new Vector3(0f, baseTop, 0.045f)).transform;
-            Lathe("Turntable", swivel, "TimerTurntable", CylinderProfile(0.052f, 0.007f, 0.002f), Vector3.zero, palette.Steel, 32);
-            Lathe("Neck", swivel, "TimerNeck", CylinderProfile(0.014f, 0.03f, 0.002f), new Vector3(0f, 0.006f, 0f), palette.DarkPlastic, 16);
-
-            Transform head = CreateChild("Head", swivel, new Vector3(0f, 0.03f, 0f)).transform;
-            head.localRotation = Quaternion.Euler(22f, 0f, 0f);
-            GameObject housing = Bevel("Housing", head, Vector3.zero, new Vector3(0.25f, 0.105f, 0.04f), 0.012f, 0.004f, palette.BodyDark, true);
-            housing.name = "Housing";
-            GameObject trim = Bevel("Trim", head, new Vector3(0f, 0.105f, 0f), new Vector3(0.25f, 0.004f, 0.04f), 0.012f, 0.0015f, palette.Steel);
-            trim.name = "Trim";
-
-            DisplayParts display = CreateDisplay(head, new Vector3(-0.012f, 0.054f, -0.0222f), 0f, new Vector2(0.2f, 0.075f), palette, "00:00.00");
-            GameObject ledObject = CreatePrimitive(PrimitiveType.Sphere, "StatusLed", head, new Vector3(0.108f, 0.085f, -0.021f), Vector3.one * 0.012f, palette.Led, false);
-            Renderer led = ledObject.GetComponent<Renderer>();
-            Renderer strip = CreateAccentStrip(head, palette, new Vector3(0f, 0.008f, -0.0205f), 0.22f);
-
-            var mount = root.AddComponent<RotatableMount>();
-            SetReference(mount, "pivot", swivel);
-            context.StopwatchMount = mount;
-
-            InstrumentButton start = CreateButton("StartButton", "START", root.transform, new Vector3(-0.075f, baseTop, -0.065f), palette.ButtonGreen, palette);
-            InstrumentButton pause = CreateButton("PauseButton", "PAUSE", root.transform, new Vector3(0f, baseTop, -0.065f), palette.ButtonBlue, palette);
-            InstrumentButton reset = CreateButton("ResetButton", "RESET", root.transform, new Vector3(0.075f, baseTop, -0.065f), palette.ButtonGray, palette);
-            InstrumentButton turnLeft = CreateButton("TurnLeftButton", "<", root.transform, new Vector3(-0.112f, baseTop, 0.055f), palette.ButtonGray, palette, 0.032f);
-            InstrumentButton turnRight = CreateButton("TurnRightButton", ">", root.transform, new Vector3(0.112f, baseTop, 0.055f), palette.ButtonGray, palette, 0.032f);
-            CreateNameplate(root.transform, "STOPWATCH   0.01 s", new Vector3(0f, 0.018f, -0.1112f), 0.16f, palette);
-            TMPro.TextMeshPro hint = CreateHintSign(root.transform, palette, new Vector3(0f, 0f, -0.155f), 0.28f, "Press START to begin timing");
-
-            SetReference(stopwatch, "valueDisplay", display.Value);
-            SetReference(stopwatch, "stateDisplay", display.State);
-            SetReference(stopwatch, "statusIndicator", led);
-
-            Connect(start, stopwatch.StartTimer);
-            Connect(pause, stopwatch.PauseTimer);
-            Connect(reset, stopwatch.ResetTimer);
-            // The arrows are seen from the user's side: "<" turns the display toward the user's left.
-            Connect(turnLeft, mount.RotateRight);
-            Connect(turnRight, mount.RotateLeft);
-
-            AddStateVisuals(root, stopwatch, hint, new[] { display.Backlight, strip }, new[] { "IDLE" },
-                "IDLE", "Press START to begin timing",
-                "RUNNING", "Timing. PAUSE freezes the time, RESET clears it",
-                "PAUSED", "Paused. START resumes, RESET clears the time");
-
-            SaveAsPrefab(root, PrefabFolder, "Stopwatch");
-            return stopwatch;
         }
 
         // ------------------------------------------------------------------

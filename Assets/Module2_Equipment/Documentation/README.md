@@ -16,6 +16,12 @@ and every scientific behavior is a simple documented model (see section 10).
 > This README remains the reference for the four instruments, whose scripts and behaviour are
 > unchanged. Setup is now one menu command: **VR Science Lab > Module 2 > Set Up Project**
 > (it replaces the manual TextMeshPro and sample imports described in section 3).
+>
+> **Heating station, storage cabinet, robot control.** The hot plate and the stopwatch now share
+> one housing (the *combined heating station*), the laboratory has a functional storage cabinet
+> with grabbable glassware, and the robot control screen was repaired. See
+> [`STATION_CABINET_ROBOT.md`](STATION_CABINET_ROBOT.md). The `HotPlate` and `StopwatchTimer`
+> scripts described below are unchanged; only their housing is shared.
 
 Contents
 
@@ -48,8 +54,8 @@ Instruments implemented:
 | Instrument | Script | States | Controls |
 |---|---|---|---|
 | Digital scale | `DigitalScale.cs` | Off, Reading | POWER, TARE |
-| Hot plate | `HotPlate.cs` | Off, Heating, MaxTemperatureReached | ON, OFF, RESET |
-| Stopwatch | `StopwatchTimer.cs` | Idle, Running, Paused | START, PAUSE, RESET |
+| Heating station: heater | `HotPlate.cs` | Off, Heating, MaxTemperatureReached | ON, OFF, RESET |
+| Heating station: timer | `StopwatchTimer.cs` | Idle, Running, Paused | START, PAUSE, RESET |
 | Thermometer | `Thermometer.cs` | Off, Reading (with / without sample) | MEASURE, RESET |
 
 ## 2. Required Unity and package versions
@@ -132,8 +138,9 @@ Module2_Lab
 ├── Environment            Floor, Back Wall, Workbench, Title Sign, Instructions Sign
 ├── Instruments
 │   ├── DigitalScale       (prefab instance) Body, Pan, WeighingZone, Display, StatusLed, PowerButton, TareButton, Nameplate
-│   ├── HotPlate           (prefab instance) Body, HeatingElement, HeatLight, Display, StatusLed, OnButton, OffButton, ResetButton, Nameplate
-│   ├── Stopwatch          (prefab instance) Body, Display, StatusLed, StartButton, PauseButton, ResetButton, Nameplate
+│   ├── HeatingStation     (prefab instance) shared Body, with two modules:
+│   │   ├── HotPlate       CeramicTop, HeatingElement, HeatingZone, HeatLight, Display, StatusLed, OnButton, OffButton, ResetButton
+│   │   └── Stopwatch      TimerDeck, Swivel/Head (Display, StatusLed), StartButton, PauseButton, ResetButton
 │   └── Thermometer        (prefab instance) Body, SampleDock, SampleZone, ProbeStand/Arm/Tip, Display, StatusLed, MeasureButton, ResetButton, Nameplate
 ├── Test Objects           Weight_100g, Weight_250g, Weight_500g, Sample_A_ColdWater, Sample_B_RoomWater, Sample_C_HotWater
 ├── XR Interaction Manager
@@ -215,7 +222,7 @@ without any XR device while debugging logic:
 | F5 | Hot plate reset | F10 | Thermometer reset |
 
 A left mouse click casts a ray from the main camera and presses the `InstrumentButton`
-under the cursor. If you use the simulator and clicks seem to fire twice, untick
+(or toggles the `CabinetDoor`) under the cursor. If you use the simulator and clicks seem to fire twice, untick
 *Enable Mouse Clicks* on the debug object. Mouse clicks are ignored automatically while a
 real headset is active. The helper is optional and can be deleted for the final build.
 
@@ -228,14 +235,14 @@ summed). Press **TARE** to zero the display with the current load (state shows
 `READING (TARE)`); remove the load and the display goes negative, like a real scale. Press
 **POWER** again to switch off: display `OFF`, tare cleared.
 
-**Hot plate** – Press **ON**: the LED turns green, the state reads `HEATING`, the
+**Heating station, heater** (left half of the station) – Press **ON**: the LED turns green, the state reads `HEATING`, the
 temperature rises from 20.0 °C at 10 °C/s, the heating element glows orange and a small
 light brightens. At 300 °C the state becomes `MAX TEMP` and the temperature stops rising.
 Press **OFF**: the state reads `OFF (COOLING)` while the plate cools at 5 °C/s back to
 20 °C, then `OFF`. Press **RESET** to put the temperature back to 20 °C immediately
 (the on/off state is kept).
 
-**Stopwatch** – Press **START**: `RUNNING`, the display counts `mm:ss.ff`. Press **PAUSE**:
+**Heating station, timer** (right half of the station) – Press **START**: `RUNNING`, the display counts `mm:ss.ff`. Press **PAUSE**:
 `PAUSED`, the time is frozen; **START** resumes from that time. Press **RESET**: `IDLE`,
 display `00:00.00`, and the stopwatch stays stopped until START is pressed again.
 

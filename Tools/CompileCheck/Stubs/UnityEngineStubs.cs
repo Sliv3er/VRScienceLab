@@ -43,6 +43,7 @@ namespace UnityEngine
         public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
         public static Vector3 zero => new Vector3(0, 0, 0);
         public static Vector3 one => new Vector3(1, 1, 1);
+        public static Vector3 up => new Vector3(0, 1, 0);
         public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
         public static Vector3 operator *(Vector3 a, float d) => new Vector3(a.x * d, a.y * d, a.z * d);
@@ -56,6 +57,8 @@ namespace UnityEngine
         public static Quaternion identity => new Quaternion { w = 1 };
         public static Quaternion Euler(float x, float y, float z) => identity;
         public static Quaternion Euler(Vector3 e) => identity;
+        public static Quaternion AngleAxis(float angle, Vector3 axis) => identity;
+        public static Quaternion operator *(Quaternion a, Quaternion b) => a;
     }
 
     public struct Color
@@ -72,6 +75,7 @@ namespace UnityEngine
         public static float Min(float a, float b) => a < b ? a : b;
         public static float Max(float a, float b) => a > b ? a : b;
         public static float Abs(float a) => Math.Abs(a);
+        public static float SmoothStep(float from, float to, float t) { t = Clamp01(t); t = t * t * (3f - 2f * t); return from + (to - from) * t; }
         public static float Clamp01(float v) => v < 0 ? 0 : (v > 1 ? 1 : v);
         public static float Clamp(float v, float a, float b) => v < a ? a : (v > b ? b : v);
         public static float Lerp(float a, float b, float t) => a + (b - a) * Clamp01(t);

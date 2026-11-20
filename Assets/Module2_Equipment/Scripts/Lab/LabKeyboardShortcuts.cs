@@ -8,7 +8,7 @@ namespace VRScienceLab.Module2
     /// <summary>
     /// Keyboard shortcuts for testing the laboratory systems in the Editor without a headset.
     /// The instrument shortcuts (F1-F10) stay in <see cref="Module2DebugInput"/>; this component
-    /// covers the samples, the robot, the search, the summary and the reset.
+    /// covers the samples, the robot, the storage cabinet, the search, the summary and the reset.
     /// Every shortcut calls the same public method as the matching UI button.
     /// </summary>
     [AddComponentMenu("VR Science Lab/Module 2/Lab Keyboard Shortcuts")]
@@ -22,6 +22,7 @@ namespace VRScienceLab.Module2
         [SerializeField] private WelcomePanel welcomePanel;
         [SerializeField] private RotatableMount stopwatchMount;
         [SerializeField] private ScientistAvatar avatar;
+        [SerializeField] private LaboratoryCabinet cabinet;
 
         [SerializeField] private bool enableShortcuts = true;
 
@@ -46,10 +47,14 @@ namespace VRScienceLab.Module2
         [SerializeField] private Key moveToThermometerKey = Key.O;
         [SerializeField] private Key returnToTrayKey = Key.P;
 
+        // X and Z are used because H and J belong to the XR Interaction Simulator (toggle HMD, 2D axis).
         [Header("Robot (digit keys 6-0 send it to stations 1-5)")]
         [SerializeField] private Key firstStationKey = Key.Digit6;
-        [SerializeField] private Key stopResumeKey = Key.H;
-        [SerializeField] private Key tourKey = Key.J;
+        [SerializeField] private Key stopResumeKey = Key.X;
+        [SerializeField] private Key tourKey = Key.Z;
+
+        [Header("Storage cabinet")]
+        [SerializeField] private Key toggleCabinetDoorsKey = Key.C;
 
         [Header("Search and rotation")]
         [SerializeField] private Key locateNextInstrumentKey = Key.F;
@@ -103,6 +108,8 @@ namespace VRScienceLab.Module2
                 if (Pressed(keyboard, stopResumeKey)) robot.ToggleStopResume();
                 if (Pressed(keyboard, tourKey)) robot.ToggleTour();
             }
+
+            if (cabinet != null && Pressed(keyboard, toggleCabinetDoorsKey)) cabinet.ToggleDoors();
 
             if (directory != null)
             {

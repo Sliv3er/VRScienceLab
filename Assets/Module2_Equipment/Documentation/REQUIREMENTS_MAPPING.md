@@ -95,3 +95,22 @@ which creates the scene objects, prefabs and materials. Checklist IDs refer to `
 | Test checklist | `TEST_CHECKLIST.md` |
 | README | `README.md` |
 | Required packages and setup steps | README §2–§3 |
+
+## Update: combined heating station, storage cabinet, robot control
+
+| Requirement | Implementation | Verified by |
+|---|---|---|
+| Hot plate and stopwatch share one equipment model | `Editor/Module2SceneBuilder.HeatingStation.cs` builds `HeatingStation` with the modules `HotPlate` and `Stopwatch`; `Scripts/HeatingStation/CombinedHeatingStation.cs` | `LabScene_HeatingStationIsOnePieceOfEquipment` |
+| Heating and timing logic stay independent | `HotPlate.cs`, `StopwatchTimer.cs` unchanged; the station only references them | `HeatingStation_HeaterAndTimerAreIndependent` |
+| Heating surface for containers | `CeramicTop` collider, `HeatingZone`, `Scripts/HeatingStation/HeatingSurface.cs` | `HeatingSurface_WarmsTheSampleStandingOnThePlate` |
+| Old separate equipment removed | Separate builders deleted; the builder deletes `Prefabs/HotPlate.prefab` and `Prefabs/Stopwatch.prefab` | `LabScene_HeatingStationIsOnePieceOfEquipment` (exactly one HotPlate and one StopwatchTimer) |
+| Storage cabinet with shelves, doors, handles | `Editor/Module2SceneBuilder.Cabinet.cs > BuildLaboratoryCabinet`, `BuildCabinetDoor` | checklist K1-K4 |
+| Doors open and close through VR controllers | `Scripts/Cabinet/CabinetDoor.cs` (`XRSimpleInteractable.selectEntered`, Transform rotation), `LaboratoryCabinet.cs` | `CabinetDoor_*`, `LaboratoryCabinet_TracksDoorsAndStoredLabware` |
+| Test tubes, Erlenmeyer flasks, rack, beakers, tape, small containers | `BuildCabinetContents` and the `Create*` labware builders; `Scripts/Cabinet/Labware.cs` | `LabScene_CabinetHoldsItsEquipmentAndTheDoorsWork` |
+| Objects can be grabbed, placed, returned; no falling through shelves | `MakeGrabbable` (Rigidbody, continuous collision detection, `XRGrabInteractable`), shelf colliders and lips, `InteriorZone` | same; checklist K5-K11 |
+| Rack positions for test tubes | `Scripts/Cabinet/LabwareSocket.cs` (`XRSocketInteractor`), `TestTubeRack.cs` | same (start state); checklist K10 |
+| Robot visible, 3D model, NavMeshAgent, stations | `Editor/Module2SceneBuilder.Robot.cs`, `Scripts/Robot/LabAssistantRobot.cs`, `RobotStation.cs` | `LabScene_RobotControlScreenButtonsDriveTheRobot` |
+| Screen buttons trigger real movement | `Scripts/UI/RobotControlPanel.cs`; buttons wired with persistent `onClick` listeners in `BuildRobotConsole`; `GraphicRaycaster` + `TrackedDeviceGraphicRaycaster` on every canvas | same, `RobotControlPanel_EveryCommandReachesTheRobot`, `LabScene_ScreensAcceptBothMouseAndControllerRays` |
+| Stop Robot, Return to Starting Position | `LabAssistantRobot.Stop`, `ReturnToStart` | same |
+| Destination and status indication | panel tiles and command line, `RobotPathIndicator.cs`, station floor rings, `RobotVisualAnimator.cs` | checklist B3 |
+| Unreachable destinations handled | `NavMesh.SamplePosition` fallback, stuck detection, `NavMeshRuntimeBaker.cs`; cart moved off the stop points | `Robot_AimsForTheNearestReachablePointWhenTheStopIsOccupied`, `Robot_ReportsWhyItCannotMoveWithoutNavMesh` |

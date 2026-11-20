@@ -494,6 +494,7 @@ namespace VRScienceLab.Module2.EditorTools
             SetReference(reset, "robot", context.Robot);
             SetReference(reset, "measurementLog", log);
             SetReferences(reset, "mounts", context.StopwatchMount);
+            SetReference(reset, "cabinet", context.Cabinet);
             context.ResetController = reset;
         }
 
@@ -514,6 +515,7 @@ namespace VRScienceLab.Module2.EditorTools
             SetReference(shortcuts, "welcomePanel", context.WelcomePanel);
             SetReference(shortcuts, "stopwatchMount", context.StopwatchMount);
             SetReference(shortcuts, "avatar", context.Avatar);
+            SetReference(shortcuts, "cabinet", context.Cabinet);
 
             GameObject simulator = FindSimulatorPrefab();
             var loader = CreateChild("XR Simulator Loader", systems, Vector3.zero).AddComponent<XRSimulatorLoader>();

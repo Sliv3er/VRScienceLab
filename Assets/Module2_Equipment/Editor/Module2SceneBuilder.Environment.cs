@@ -60,7 +60,7 @@ namespace VRScienceLab.Module2.EditorTools
             BuildRoomShell(palette, architecture);
             BuildCeilingLights(palette, architecture);
             BuildMainWorkbench(palette, furniture, details);
-            BuildStorageWall(palette, furniture, details);
+            BuildStorageWall(context, palette, furniture, details);
             BuildFumeHood(palette, furniture);
             BuildAnalysisDesk(palette, furniture, details);
             BuildIslandTable(palette, furniture, details);
@@ -253,10 +253,14 @@ namespace VRScienceLab.Module2.EditorTools
         }
 
         // ------------------------------------------------------------------
-        // Storage wall (left): tall cabinets with glass-fronted upper sections
+        // Storage wall (left): tall cabinets with glass-fronted upper sections.
+        // Units 1 and 3 are closed display units; unit 2 is the interactive laboratory cabinet
+        // (see Module2SceneBuilder.Cabinet.cs).
         // ------------------------------------------------------------------
 
-        private static void BuildStorageWall(Palette palette, Transform furniture, Transform details)
+        private const int InteractiveStorageUnit = 1;
+
+        private static void BuildStorageWall(BuildContext context, Palette palette, Transform furniture, Transform details)
         {
             Transform storage = CreateChild("Storage Cabinets", furniture, Vector3.zero).transform;
             const float depth = 0.55f, unitWidth = 0.9f, lowerHeight = 0.95f, totalHeight = 2.25f;
@@ -268,6 +272,14 @@ namespace VRScienceLab.Module2.EditorTools
             for (int i = 0; i < centersZ.Length; i++)
             {
                 float z = centersZ[i];
+                if (i == InteractiveStorageUnit)
+                {
+                    // The middle unit is the functional storage cabinet (hinged doors, shelves with
+                    // colliders, grabbable equipment). Its local front (-Z) is turned toward the room (+X).
+                    BuildLaboratoryCabinet(context, palette, storage, new Vector3(centerX, 0f, z), -90f);
+                    continue;
+                }
+
                 Transform unit = CreateChild($"Storage Unit {i + 1}", storage, new Vector3(centerX, 0f, z)).transform;
 
                 // One collider for the whole unit; the visible parts carry none.
@@ -614,6 +626,19 @@ namespace VRScienceLab.Module2.EditorTools
         // Objects animated at runtime must not be static (static batching would freeze them).
         private static void UnmarkAnimatedObjects(Transform root)
         {
+            foreach (CabinetDoor door in root.GetComponentsInChildren<CabinetDoor>(true))
+            {
+                foreach (Transform child in door.GetComponentsInChildren<Transform>(true))
+                {
+                    child.gameObject.isStatic = false;
+                }
+            }
+
+            foreach (MeasurementZone zone in root.GetComponentsInChildren<MeasurementZone>(true))
+            {
+                zone.gameObject.isStatic = false;
+            }
+
             foreach (TransformAnimator animator in root.GetComponentsInChildren<TransformAnimator>(true))
             {
                 foreach (Transform child in animator.GetComponentsInChildren<Transform>(true))

@@ -4,13 +4,16 @@ Group university project: an interactive VR laboratory built with Unity 6.3 LTS,
 XR Interaction Toolkit 3.x. Each student owns one module under `Assets/Module<N>_*`.
 
 This repository currently contains **Module 2 – Scientific Equipment and Its Behavior**:
-a complete laboratory room with four working instruments (digital scale, hot plate, stopwatch,
-thermometer), a sample system (create / select / move / scale / remove), an autonomous
-laboratory assistant robot on a NavMesh, a scientist avatar for the VR user and three
-world-space screens (welcome + measurement summary, sample management, robot control).
+a complete laboratory room with working instruments (digital scale, combined heating station
+with a hot plate and a timer, thermometer), a storage cabinet with hinged doors and grabbable
+glassware, a sample system (create / select / move / scale / remove), an autonomous laboratory
+assistant robot on a NavMesh, a scientist avatar for the VR user and three world-space screens
+(welcome + measurement summary, sample management, robot control).
 
 * **Evaluation checklist (requirement → implementation → how to demonstrate):**
   [`Assets/Module2_Equipment/Documentation/TECHNICAL_VALIDATION.md`](Assets/Module2_Equipment/Documentation/TECHNICAL_VALIDATION.md)
+* Heating station, storage cabinet, robot control screen:
+  [`Assets/Module2_Equipment/Documentation/STATION_CABINET_ROBOT.md`](Assets/Module2_Equipment/Documentation/STATION_CABINET_ROBOT.md)
 * Instruments in depth: [`Assets/Module2_Equipment/Documentation/README.md`](Assets/Module2_Equipment/Documentation/README.md)
 * Test checklist: [`Assets/Module2_Equipment/Documentation/TEST_CHECKLIST.md`](Assets/Module2_Equipment/Documentation/TEST_CHECKLIST.md)
 * Requirement mapping (instruments): [`Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md`](Assets/Module2_Equipment/Documentation/REQUIREMENTS_MAPPING.md)
@@ -57,9 +60,11 @@ git clone https://github.com/Sliv3er/VRScienceLab.git
    WASD moves, the on-screen panel shows the controller keys. Press **Enter** to begin.
 4. Window > General > **Test Runner** > PlayMode > *Run All* to execute the automated tests.
 
-Keyboard shortcuts without a controller: F1/F2 scale power/tare, F3/F4/F5 hot plate on/off/reset,
-F6/F7/F8 stopwatch start/pause/reset, F9/F10 thermometer measure/reset, B/N/M/K create samples,
-U/I/O/P move the selected sample, 6-0 send the robot to a station, Home resets the laboratory.
+Keyboard shortcuts without a controller: F1/F2 scale power/tare, F3/F4/F5 heater on/off/reset,
+F6/F7/F8 timer start/pause/reset, F9/F10 thermometer measure/reset, B/N/M/K create samples,
+U/I/O/P move the selected sample, C opens / closes the storage cabinet, 6-0 send the robot to a
+station, X stops / resumes it, Home resets the laboratory. A left click presses the button, door
+or screen button under the cursor.
 The full list is in the evaluation checklist.
 
 ### 5. Headset (optional)
@@ -75,10 +80,12 @@ headset (Quest Link / SteamVR) and press Play. Full details are in the Module 2 
 | Console: "TextMeshPro essential resources are not imported" | Run *Set Up Project* (step 3.4) |
 | Builder warns "Starter Assets sample not found" and the rig has no controllers | Run *Set Up Project* (step 3.4), then Build Lab Scene again |
 | Nothing happens in Play mode with keyboard/mouse | Run *Set Up Project*, rebuild the scene; `Lab Systems/XR Simulator Loader` must reference the simulator prefab |
-| The robot does not move ("not on a NavMesh") | VR Science Lab > Module 2 > Bake NavMesh, save the scene |
+| After pulling an update the scene looks unchanged | The scene, prefabs and NavMesh are generated, not stored in Git: run Build Lab Scene again |
+| A screen button does nothing | Read the line under the robot buttons: it shows the command the screen received and the robot's answer. No text change means the click did not reach the screen (rebuild the scene: every screen needs a Graphic Raycaster and a Tracked Device Graphic Raycaster) |
+| The robot does not move ("not on a NavMesh") | VR Science Lab > Module 2 > Bake NavMesh, save the scene. If the baked data is missing the scene builds the NavMesh at start |
 | Keys F1–F10 do nothing | Edit > Project Settings > Player > Active Input Handling must be *Input System Package (New)* or *Both* |
 | Pink materials | The project uses the Built-in render pipeline; if you switched to URP, re-run Build Lab Scene (the builder picks URP shaders automatically) |
 | A different Unity version is installed | Any 6000.0 or newer works; let the Hub upgrade the project, then re-run Build Lab Scene |
 
-`Tools/CompileCheck` contains compile checks that run without opening the Unity editor
-(see `Tools/CompileCheck/README.md`); it is not part of the Unity project.
+`Tools/CompileCheck` and `Tools/HeadlessSim` contain checks that run without opening the Unity
+editor (see their README files); they are not part of the Unity project.
